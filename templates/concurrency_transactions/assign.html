@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Assign Ticket{% endblock %}
+{% block content %}
+<div style="max-width:560px">
+<div class="card">
+    <h2 style="margin-bottom:6px">🔒 Assign Ticket #{{ complaint.id }}</h2>
+    <p style="color:#718096;margin-bottom:20px;font-size:0.88rem">
+        Uses a SELECT FOR UPDATE lock — only one admin can assign this ticket at a time.
+    </p>
+    <p><strong>Title:</strong> {{ complaint.title }}</p>
+    <p style="margin:8px 0"><strong>Category:</strong> {{ complaint.category.name }}</p>
+    <p style="margin-bottom:20px"><strong>Status:</strong> {{ complaint.get_status_display }}</p>
+    <form method="post">
+        {% csrf_token %}
+        <label>Assign To *</label>
+        <select name="staff_id" required>
+            <option value="">— Select Staff Member —</option>
+            {% for s in available_staff %}
+            <option value="{{ s.id }}">
+                {{ s.get_full_name }} ({{ s.workload.active_count|default:0 }}/{{ s.workload.max_capacity|default:5 }} tasks)
+            </option>
+            {% endfor %}
+        </select>
+        <label>Notes</label>
+        <textarea name="notes" rows="2" placeholder="Optional assignment notes..."></textarea>
+        <button class="btn btn-primary" type="submit">Assign (Atomic Transaction)</button>
+    </form>
+</div>
+</div>
+{% endblock %}

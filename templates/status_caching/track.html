@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Track Complaint #{{ complaint.id }}{% endblock %}
+{% block content %}
+<div style="max-width:680px">
+<div class="card">
+    <h2 style="margin-bottom:6px">#{{ complaint.id }} — {{ complaint.title }}</h2>
+    <p style="color:#718096;margin-bottom:16px;font-size:0.88rem">{{ complaint.description }}</p>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:20px;font-size:0.88rem">
+        <span><strong>Category:</strong> {{ complaint.category.name }}</span>
+        <span><strong>Location:</strong> {{ complaint.get_location_display }}{% if complaint.location_detail %} — {{ complaint.location_detail }}{% endif %}</span>
+        <span><strong>Status:</strong> <span class="badge badge-{{ complaint.status }}">{{ complaint.get_status_display }}</span></span>
+        <span><strong>Assigned:</strong> {{ complaint.assigned_to.get_full_name|default:"Unassigned" }}</span>
+    </div>
+
+    {% if user == complaint.assigned_to or user.role == 'admin' %}
+    <a href="{% url 'status_caching:update_status' complaint.id %}" class="btn btn-primary" style="margin-bottom:20px">Update Status</a>
+    {% endif %}
+
+    <h3 style="margin-bottom:12px">Status History</h3>
+    {% for update in status_history %}
+    <div style="border-left:3px solid #4299e1;padding:8px 14px;margin-bottom:10px;background:#f7fafc;border-radius:0 6px 6px 0">
+        <div style="display:flex;justify-content:space-between;font-size:0.82rem;color:#718096">
+            <span>{{ update.timestamp|date:"d M Y, H:i" }}</span>
+            <span>by {{ update.updated_by.get_full_name|default:"System" }}</span>
+        </div>
+        <div style="margin-top:4px">
+            <span class="badge badge-{{ update.old_status }}">{{ update.old_status }}</span>
+            → <span class="badge badge-{{ update.new_status }}">{{ update.new_status }}</span>
+            {% if update.note %}<span style="font-size:0.85rem;color:#4a5568;margin-left:8px">{{ update.note }}</span>{% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <p style="color:#a0aec0">No status updates yet.</p>
+    {% endfor %}
+</div>
+</div>
+{% endblock %}

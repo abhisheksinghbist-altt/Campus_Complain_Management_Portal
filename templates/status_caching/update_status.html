@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Update Status{% endblock %}
+{% block content %}
+<div style="max-width:480px">
+<div class="card">
+    <h2 style="margin-bottom:16px">Update Status — #{{ complaint.id }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        <label>New Status</label>
+        <select name="status" required>
+            {% for val, label in status_choices %}
+            <option value="{{ val }}" {% if complaint.status == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <label>Note (optional)</label>
+        <textarea name="note" rows="2" placeholder="e.g. Electrician dispatched..."></textarea>
+        <button class="btn btn-primary" type="submit">Save Update</button>
+    </form>
+</div>
+</div>
+{% endblock %}

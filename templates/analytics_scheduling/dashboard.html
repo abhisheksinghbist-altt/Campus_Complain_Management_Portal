@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h2 style="margin-bottom:20px">📊 Complaint Dashboard</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:28px">
+    {% for label, value, color in stats_list %}
+    <div class="card" style="text-align:center;border-top:4px solid {{ color }}">
+        <div style="font-size:2rem;font-weight:700;color:{{ color }}">{{ value }}</div>
+        <div style="font-size:0.85rem;color:#718096;margin-top:4px">{{ label }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+<div class="card">
+    <h3 style="margin-bottom:14px">By Category</h3>
+    <table>
+        <thead><tr><th>Category</th><th>Count</th><th>Priority</th></tr></thead>
+        <tbody>
+        {% for c in category_stats %}
+        <tr><td>{{ c.name }}</td><td>{{ c.count }}</td><td>{{ c.priority }}</td></tr>
+        {% empty %}
+        <tr><td colspan="3" style="color:#a0aec0">No data yet</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="card">
+    <h3 style="margin-bottom:14px">By Department</h3>
+    <table>
+        <thead><tr><th>Department</th><th>Complaints</th></tr></thead>
+        <tbody>
+        {% for d in dept_stats %}
+        <tr><td>{{ d.submitter__department|default:"—" }}</td><td>{{ d.count }}</td></tr>
+        {% empty %}
+        <tr><td colspan="2" style="color:#a0aec0">No data yet</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+</div>
+{% endblock %}

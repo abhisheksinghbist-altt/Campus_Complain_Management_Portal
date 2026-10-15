@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Submit Complaint{% endblock %}
+{% block content %}
+<div style="max-width:600px">
+<div class="card">
+    <h2 style="margin-bottom:20px;color:#2b6cb0">📝 Submit a Complaint</h2>
+    <form method="post">
+        {% csrf_token %}
+        <label>Title *</label>
+        <input type="text" name="title" required placeholder="Brief summary of the issue">
+        <label>Description *</label>
+        <textarea name="description" rows="4" required placeholder="Describe the problem in detail..."></textarea>
+        <label>Category *</label>
+        <select name="category" required>
+            <option value="">— Select Category —</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+        <label>Location</label>
+        <select name="location">
+            <option value="classroom">Classroom</option>
+            <option value="hostel">Hostel</option>
+            <option value="lab">Lab</option>
+            <option value="office">Office</option>
+            <option value="canteen">Canteen</option>
+            <option value="library">Library</option>
+            <option value="other">Other</option>
+        </select>
+        <label>Location Detail</label>
+        <input type="text" name="location_detail" placeholder="e.g. Room 204, Block A">
+        <button class="btn btn-primary" type="submit">Submit Complaint</button>
+    </form>
+</div>
+</div>
+{% endblock %}

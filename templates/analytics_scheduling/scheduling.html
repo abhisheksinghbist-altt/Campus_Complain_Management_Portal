@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Scheduling Demo{% endblock %}
+{% block content %}
+<h2 style="margin-bottom:20px">⚙️ OS Scheduling Algorithms</h2>
+<p style="margin-bottom:20px;color:#718096">
+    Demonstrates how OS CPU scheduling concepts apply to complaint prioritization.
+</p>
+{% for algo, queue, desc in queues %}
+<div class="card">
+    <h3>{{ algo }} <span style="font-size:0.8rem;color:#718096">— {{ desc }}</span></h3>
+    <table style="margin-top:12px">
+        <thead><tr><th>#</th><th>Title</th><th>Category</th><th>Priority</th><th>Submitted</th></tr></thead>
+        <tbody>
+        {% for c in queue %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ c.title }}</td>
+            <td>{{ c.category.name }}</td>
+            <td>{{ c.category.priority }}</td>
+            <td>{{ c.submitted_at|date:"d M, H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" style="color:#a0aec0">No pending complaints</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endfor %}
+{% endblock %}

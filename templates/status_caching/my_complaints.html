@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}My Complaints{% endblock %}
+{% block content %}
+<h2 style="margin-bottom:6px">My Complaints</h2>
+<p style="color:#718096;margin-bottom:20px;font-size:0.88rem">
+    Total: <strong>{{ total_count }}</strong>
+    <span style="font-size:0.78rem;color:#a0aec0">(count served from file cache when available)</span>
+</p>
+<div class="card">
+<table>
+    <thead><tr><th>ID</th><th>Title</th><th>Category</th><th>Status</th><th>Submitted</th><th></th></tr></thead>
+    <tbody>
+    {% for c in complaints %}
+    <tr>
+        <td>#{{ c.id }}</td>
+        <td>{{ c.title }}</td>
+        <td>{{ c.category.name }}</td>
+        <td><span class="badge badge-{{ c.status }}">{{ c.get_status_display }}</span></td>
+        <td>{{ c.submitted_at|date:"d M Y" }}</td>
+        <td><a href="{% url 'status_caching:track' c.id %}" class="btn btn-primary" style="padding:4px 10px;font-size:0.8rem">Track</a></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" style="text-align:center;color:#a0aec0;padding:24px">You haven't submitted any complaints yet.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+<a href="{% url 'submission_monitoring:submit' %}" class="btn btn-primary">+ New Complaint</a>
+{% endblock %}
