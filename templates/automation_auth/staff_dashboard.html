@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}My Tasks{% endblock %}
+{% block page_title %}My Tasks{% endblock %}
+{% block page_sub %}Your assigned complaints and workload{% endblock %}
+{% block content %}
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);">
+  <div class="stat-card" style="border-left-color:#3b82f6;"><div class="stat-value" style="color:#3b82f6;">{{ active }}</div><div class="stat-label">Active Tasks</div></div>
+  <div class="stat-card" style="border-left-color:#10b981;"><div class="stat-value" style="color:#10b981;">{{ resolved_week }}</div><div class="stat-label">Resolved This Week</div></div>
+  <div class="stat-card" style="border-left-color:#f59e0b;">
+    <div class="stat-value" style="color:#f59e0b;">{{ workload.active_count }}/{{ workload.max_capacity }}</div>
+    <div class="stat-label">Capacity</div>
+    <div class="progress" style="margin-top:8px;">
+      <div class="progress-bar" style="width:{% widthratio workload.active_count workload.max_capacity 100 %}%;background:{% if workload.active_count >= workload.max_capacity %}var(--danger){% elif workload.active_count >= 3 %}var(--warning){% else %}var(--success){% endif %};"></div>
+    </div>
+  </div>
+  <div class="stat-card" style="border-left-color:#8b5cf6;"><div class="stat-value" style="color:#8b5cf6;">{{ my_complaints|length }}</div><div class="stat-label">Total Assigned</div></div>
+</div>
+<div class="card" style="padding:0;overflow:hidden;">
+  <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+    <div class="section-title">Assigned Complaints</div>
+  </div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>#</th><th>Title</th><th>Category</th><th>Submitter</th><th>Status</th><th>Submitted</th><th>Action</th></tr></thead>
+    <tbody>
+    {% for c in my_complaints %}
+    <tr>
+      <td style="color:var(--muted);font-size:0.8rem;">#{{ c.id }}</td>
+      <td style="font-weight:500;">{{ c.title|truncatechars:45 }}</td>
+      <td style="font-size:0.82rem;">{{ c.category.name }}</td>
+      <td style="font-size:0.82rem;">{{ c.submitter.get_full_name }}</td>
+      <td><span class="badge badge-{{ c.status }}">{{ c.get_status_display }}</span></td>
+      <td style="font-size:0.78rem;color:var(--muted);">{{ c.submitted_at|date:"d M Y" }}</td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          <a href="{% url 'submission_monitoring:detail' c.id %}" class="btn btn-ghost btn-sm">View</a>
+          {% if c.status != 'resolved' and c.status != 'closed' %}
+          <a href="{% url 'status_caching:update_status' c.id %}" class="btn btn-primary btn-sm">Update</a>
+          {% endif %}
+        </div>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">✅</div><p>No tasks assigned to you yet.</p></div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

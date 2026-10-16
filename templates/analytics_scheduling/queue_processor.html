@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Queue Processor{% endblock %}
+{% block content %}
+<h2 style="margin-bottom:6px">Live Queue Processor</h2>
+<p style="color:#718096;margin-bottom:20px">
+  Complaints ordered by the selected algorithm. Switch algorithm to see how
+  the queue order changes. Run Bulk Assign to process the full queue at once.
+</p>
+
+<!-- Algorithm switcher -->
+<div class="card" style="margin-bottom:20px;padding:16px">
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+    <strong style="margin-right:6px">Algorithm:</strong>
+    {% for key, triple in algorithms %}
+    <a href="?algorithm={{ key }}"
+       class="btn {% if algorithm == key %}btn-primary{% endif %}"
+       style="{% if algorithm != key %}background:#e2e8f0;color:#2d3748;{% endif %}">
+      {{ triple.0 }}
+    </a>
+    {% endfor %}
+    <span style="margin-left:auto;color:#718096;font-size:0.88rem">
+      {{ algo_desc }}
+    </span>
+  </div>
+</div>
+
+<!-- Summary bar -->
+<div style="display:flex;gap:12px;margin-bottom:20px;font-size:0.88rem">
+  <div class="card" style="flex:1;text-align:center;padding:12px;border-top:3px solid #d69e2e">
+    <strong style="font-size:1.4rem;color:#d69e2e">{{ total }}</strong>
+    <div style="color:#718096">Pending</div>
+  </div>
+  <div class="card" style="flex:1;text-align:center;padding:12px;border-top:3px solid #276749">
+    <strong style="font-size:1.4rem;color:#276749">{{ staff_pool|length }}</strong>
+    <div style="color:#718096">Available Staff</div>
+  </div>
+  <div class="card" style="flex:1;padding:12px;display:flex;align-items:center">
+    <a href="{% url "dashboard:bulk_assign" %}" class="btn btn-primary" style="width:100%;text-align:center">
+      Run Bulk Assign
+    </a>
+  </div>
+</div>
+
+<!-- Queue table -->
+<div class="card">
+  <h3 style="margin-bottom:14px">Queue: {{ algo_label }}</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Position</th>
+        <th>Complaint</th>
+        <th>Category</th>
+        <th>Priority</th>
+        <th>Avg Hrs</th>
+        <th>Submitted</th>
+        <th>Would Assign To</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for item in queue_items %}
+    <tr style="{% if item.position == 1 %}background:#f0fff4;{% endif %}">
+      <td>
+        {% if item.position == 1 %}
+          <span style="font-weight:700;color:#276749">1 (Next)</span>
+        {% else %}
+          {{ item.position }}
+        {% endif %}
+      </td>
+      <td>{{ item.complaint.title }}</td>
+      <td>{{ item.complaint.category.name }}</td>
+      <td>
+        <span class="badge" style="
+          {% if item.complaint.category.priority == 1 %}background:#fed7d7;color:#9b2c2c
+          {% elif item.complaint.category.priority == 2 %}background:#fef3c7;color:#92400e
+          {% elif item.complaint.category.priority == 3 %}background:#dbeafe;color:#1e40af
+          {% else %}background:#e2e8f0;color:#4a5568{% endif %}">
+          P{{ item.complaint.category.priority }}
+        </span>
+      </td>
+      <td>{{ item.complaint.category.avg_resolution_hours }}h</td>
+      <td>{{ item.complaint.submitted_at|date:"d M H:i" }}</td>
+      <td style="color:#276749;font-weight:600">{{ item.candidate }}</td>
+      <td>
+        <a href="{% url "concurrency_transactions:assign" item.complaint.id %}"
+           class="btn btn-primary" style="padding:4px 12px;font-size:0.8rem">
+          Assign
+        </a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="8" style="color:#a0aec0;text-align:center;padding:24px">
+      No pending complaints in the queue.
+    </td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

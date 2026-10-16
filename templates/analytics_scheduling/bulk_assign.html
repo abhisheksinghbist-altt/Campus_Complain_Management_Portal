@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Bulk Auto-Assignment{% endblock %}
+{% block content %}
+<h2 style="margin-bottom:6px">Bulk Auto-Assignment</h2>
+<p style="color:#718096;margin-bottom:24px">
+  Select a scheduling algorithm. The system will process all pending complaints
+  in that order and atomically assign each one to an available staff member
+  using SELECT FOR UPDATE (mutex) to prevent race conditions.
+</p>
+
+<!-- Status bar -->
+<div style="display:flex;gap:16px;margin-bottom:24px">
+  <div class="card" style="flex:1;text-align:center;border-top:4px solid #d69e2e">
+    <div style="font-size:2rem;font-weight:700;color:#d69e2e">{{ pending_count }}</div>
+    <div style="font-size:0.85rem;color:#718096;margin-top:4px">Pending Complaints</div>
+  </div>
+  <div class="card" style="flex:1;text-align:center;border-top:4px solid #276749">
+    <div style="font-size:2rem;font-weight:700;color:#276749">{{ staff_count }}</div>
+    <div style="font-size:0.85rem;color:#718096;margin-top:4px">Available Staff</div>
+  </div>
+</div>
+
+<!-- Algorithm selector form -->
+<div class="card" style="margin-bottom:24px">
+  <h3 style="margin-bottom:16px">Choose Algorithm</h3>
+  <form method="post">
+    {% csrf_token %}
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px">
+      {% for key, triple in algorithms %}
+      <label style="cursor:pointer">
+        <input type="radio" name="algorithm" value="{{ key }}"
+          {% if forloop.first %}checked{% endif %}
+          style="width:auto;margin-right:6px">
+        <strong>{{ triple.0 }}</strong>
+        <div style="font-size:0.8rem;color:#718096;margin-top:4px;margin-left:18px">{{ triple.2 }}</div>
+      </label>
+      {% endfor %}
+    </div>
+    <button type="submit" class="btn btn-primary"
+      {% if pending_count == 0 %}disabled title="No pending complaints"{% endif %}
+      style="padding:10px 28px;font-size:1rem">
+      Run Auto-Assignment
+    </button>
+    {% if pending_count == 0 %}
+    <span style="margin-left:12px;color:#a0aec0;font-size:0.88rem">No pending complaints to process.</span>
+    {% endif %}
+  </form>
+</div>
+
+<!-- Results table -->
+{% if results %}
+<div class="card">
+  <h3 style="margin-bottom:4px">Results: {{ results.label }}</h3>
+  <p style="color:#718096;margin-bottom:16px;font-size:0.88rem">
+    {{ results.assigned }} assigned &nbsp;|&nbsp;
+    {{ results.skipped }} skipped &nbsp;|&nbsp;
+    {{ results.no_staff }} no staff &nbsp;|&nbsp;
+    {{ results.total }} total
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Complaint</th>
+        <th>Category</th>
+        <th>Outcome</th>
+        <th>Assigned To</th>
+        <th>Note</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for d in results.details %}
+    <tr>
+      <td>{{ forloop.counter }}</td>
+      <td>{{ d.complaint.title }}</td>
+      <td>{{ d.complaint.category.name }}</td>
+      <td>
+        {% if d.status == "assigned" %}
+          <span class="badge badge-assigned">Assigned</span>
+        {% elif d.status == "skipped" %}
+          <span class="badge badge-closed">Skipped</span>
+        {% elif d.status == "no_staff" %}
+          <span class="badge" style="background:#fed7d7;color:#9b2c2c">No Staff</span>
+        {% else %}
+          <span class="badge" style="background:#fed7d7;color:#9b2c2c">Error</span>
+        {% endif %}
+      </td>
+      <td>{{ d.assigned_to|default:"-" }}</td>
+      <td style="font-size:0.82rem;color:#718096">{{ d.reason }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" style="color:#a0aec0">No complaints processed.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

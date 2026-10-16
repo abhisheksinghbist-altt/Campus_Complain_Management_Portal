@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}System Logs{% endblock %}
+{% block page_title %}System Logs{% endblock %}
+{% block page_sub %}Audit trail of all system actions{% endblock %}
+{% block content %}
+<div class="filter-bar">
+  <form method="get" style="display:flex;gap:10px;align-items:flex-end;width:100%;">
+    <div class="form-group" style="margin-bottom:0;flex:1;">
+      <label>Filter by Action</label>
+      <select class="form-control" name="action">
+        <option value="">All Actions</option>
+        {% for val, label in action_choices %}
+        <option value="{{ val }}" {% if action_filter == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;align-items:flex-end;">
+      <button class="btn btn-primary btn-sm" type="submit">Filter</button>
+      <a class="btn btn-ghost btn-sm" href="{% url 'file_engine:logs' %}">Clear</a>
+    </div>
+  </form>
+</div>
+<div class="card" style="padding:0;overflow:hidden;">
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Time</th><th>Action</th><th>Actor</th><th>Complaint</th><th>Description</th></tr></thead>
+    <tbody>
+    {% for log in logs %}
+    <tr>
+      <td style="font-size:0.78rem;color:var(--muted);white-space:nowrap;">{{ log.timestamp|date:"d M Y, H:i" }}</td>
+      <td>
+        <span class="badge" style="
+          {% if log.action == 'status_change' %}background:#dbeafe;color:#1e40af;
+          {% elif log.action == 'assignment' %}background:#d1fae5;color:#065f46;
+          {% elif log.action == 'file_upload' %}background:#ede9fe;color:#5b21b6;
+          {% elif log.action == 'login' %}background:#d1fae5;color:#065f46;
+          {% elif log.action == 'logout' %}background:#f1f5f9;color:#475569;
+          {% else %}background:#fef3c7;color:#92400e;{% endif %}">
+          {{ log.get_action_display }}
+        </span>
+      </td>
+      <td style="font-size:0.82rem;">{{ log.actor.get_full_name|default:"System" }}</td>
+      <td style="font-size:0.82rem;">{% if log.complaint %}<a href="{% url 'submission_monitoring:detail' log.complaint.id %}" style="color:var(--accent);">#{{ log.complaint.id }}</a>{% else %}—{% endif %}</td>
+      <td style="font-size:0.82rem;color:var(--muted);">{{ log.description|truncatechars:60 }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📜</div><p>No system logs yet.</p></div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

@@ -82,6 +82,8 @@ class Complaint(models.Model):
         ]
         ordering = ['-submitted_at']
 
+    rating = models.PositiveSmallIntegerField(null=True, blank=True, help_text='1-5 star rating by submitter after resolution')
+
     def resolution_hours(self):
         """Returns hours taken to resolve, or None if not resolved."""
         if self.resolved_at and self.submitted_at:

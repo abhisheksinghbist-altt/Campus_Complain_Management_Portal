@@ -1,30 +1,51 @@
 {% extends "base.html" %}
 {% block title %}Assign Ticket{% endblock %}
+{% block page_title %}Assign Complaint #{{ complaint.id }}{% endblock %}
+{% block page_sub %}Atomic assignment using SELECT FOR UPDATE (mutex){% endblock %}
 {% block content %}
-<div style="max-width:560px">
-<div class="card">
-    <h2 style="margin-bottom:6px">🔒 Assign Ticket #{{ complaint.id }}</h2>
-    <p style="color:#718096;margin-bottom:20px;font-size:0.88rem">
-        Uses a SELECT FOR UPDATE lock — only one admin can assign this ticket at a time.
-    </p>
-    <p><strong>Title:</strong> {{ complaint.title }}</p>
-    <p style="margin:8px 0"><strong>Category:</strong> {{ complaint.category.name }}</p>
-    <p style="margin-bottom:20px"><strong>Status:</strong> {{ complaint.get_status_display }}</p>
+<div style="max-width:580px;">
+  <div class="card" style="border-left:4px solid var(--warning);">
+    <div style="font-size:0.8rem;color:var(--warning);font-weight:700;text-transform:uppercase;margin-bottom:6px;">Complaint Details</div>
+    <div style="font-weight:700;font-size:1rem;">{{ complaint.title }}</div>
+    <div style="color:var(--muted);font-size:0.85rem;margin-top:4px;">{{ complaint.category.name }} &bull; {{ complaint.get_location_display }} &bull; <span class="badge badge-{{ complaint.status }}">{{ complaint.get_status_display }}</span></div>
+  </div>
+  <div class="card">
     <form method="post">
-        {% csrf_token %}
-        <label>Assign To *</label>
-        <select name="staff_id" required>
-            <option value="">— Select Staff Member —</option>
-            {% for s in available_staff %}
-            <option value="{{ s.id }}">
-                {{ s.get_full_name }} ({{ s.workload.active_count|default:0 }}/{{ s.workload.max_capacity|default:5 }} tasks)
-            </option>
-            {% endfor %}
-        </select>
-        <label>Notes</label>
-        <textarea name="notes" rows="2" placeholder="Optional assignment notes..."></textarea>
-        <button class="btn btn-primary" type="submit">Assign (Atomic Transaction)</button>
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Assign To <span style="color:var(--danger)">*</span></label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
+        {% for s in available_staff %}
+          {% with wl=s.workload %}
+          {% with pct=wl.active_count|add:0 %}
+          <label style="cursor:pointer;border:2px solid var(--border);border-radius:8px;padding:12px;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+            <input type="radio" name="staff_id" value="{{ s.id }}" required style="display:none;">
+            <div style="font-weight:600;font-size:0.875rem;">{{ s.get_full_name }}</div>
+            <div style="font-size:0.75rem;color:var(--muted);">{{ s.department }}</div>
+            <div style="margin-top:8px;">
+              <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--muted);margin-bottom:3px;">
+                <span>Workload</span><span>{{ wl.active_count|default:0 }}/{{ wl.max_capacity|default:5 }}</span>
+              </div>
+              <div class="progress">
+                <div class="progress-bar" style="width:{% widthratio wl.active_count|default:0 wl.max_capacity|default:5 100 %}%;background:{% if wl.active_count >= wl.max_capacity %}var(--danger){% elif wl.active_count >= 3 %}var(--warning){% else %}var(--success){% endif %};"></div>
+              </div>
+            </div>
+          </label>
+          {% endwith %}{% endwith %}
+        {% empty %}
+          <p style="color:var(--danger);grid-column:1/-1;">No available staff members with remaining capacity.</p>
+        {% endfor %}
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes (optional)</label>
+        <textarea class="form-control" name="notes" rows="2" placeholder="Assignment notes..."></textarea>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" type="submit">Assign Atomically</button>
+        <a href="{% url 'submission_monitoring:list' %}" class="btn btn-ghost">Cancel</a>
+      </div>
     </form>
-</div>
+  </div>
 </div>
 {% endblock %}

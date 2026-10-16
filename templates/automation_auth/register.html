@@ -1,28 +1,58 @@
 {% extends "base.html" %}
 {% block title %}Register — Campus Portal{% endblock %}
 {% block content %}
-<div style="max-width:480px;margin:40px auto">
-<div class="card">
-    <h2 style="margin-bottom:20px;color:#2b6cb0">Create Account</h2>
+<div style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:20px 0;">
+<div style="width:100%;max-width:520px;">
+  <div style="text-align:center;margin-bottom:24px;">
+    <div style="font-size:2.5rem;">📋</div>
+    <h2 style="font-size:1.4rem;font-weight:800;margin-top:8px;">Create Account</h2>
+    <p style="color:var(--muted);font-size:0.85rem;">Join the Campus Complaint Portal</p>
+  </div>
+  <div class="card" style="padding:28px;">
     <form method="post">
-        {% csrf_token %}
-        <label>First Name</label><input type="text" name="first_name" required>
-        <label>Last Name</label><input type="text" name="last_name" required>
-        <label>Username</label><input type="text" name="username" required>
-        <label>Email</label><input type="email" name="email" required>
-        <label>Password</label><input type="password" name="password" required>
-        <label>Role</label>
-        <select name="role">
+      {% csrf_token %}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label>First Name</label>
+          <input class="form-control" type="text" name="first_name" required placeholder="First name">
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input class="form-control" type="text" name="last_name" required placeholder="Last name">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Username</label>
+        <input class="form-control" type="text" name="username" required placeholder="Choose a username">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input class="form-control" type="email" name="email" required placeholder="your@email.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input class="form-control" type="password" name="password" required placeholder="Create a password">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label>Role</label>
+          <select class="form-control" name="role">
             <option value="student">Student</option>
             <option value="faculty">Faculty</option>
             <option value="staff">Staff</option>
-        </select>
-        <label>Department</label><input type="text" name="department" placeholder="e.g. Computer Science">
-        <button class="btn btn-primary" style="width:100%" type="submit">Register</button>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Department</label>
+          <input class="form-control" type="text" name="department" placeholder="e.g. CSE">
+        </div>
+      </div>
+      <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center;padding:10px;">Create Account</button>
     </form>
-    <p style="margin-top:14px;text-align:center;font-size:0.88rem">
-        Already registered? <a href="{% url 'automation_auth:login' %}">Login</a>
+    <p style="margin-top:16px;text-align:center;font-size:0.85rem;color:var(--muted);">
+      Already registered? <a href="{% url 'automation_auth:login' %}" style="color:var(--accent);font-weight:600;">Sign in</a>
     </p>
+  </div>
 </div>
 </div>
 {% endblock %}

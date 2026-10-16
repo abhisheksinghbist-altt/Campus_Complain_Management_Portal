@@ -1,73 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Campus Complaint Portal{% endblock %}</title>
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; color: #2d3748; }
-        nav { background: #1a365d; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
-        nav a { color: #bee3f8; text-decoration: none; margin: 0 10px; font-size: 0.9rem; }
-        nav a:hover { color: #fff; }
-        .nav-brand { font-size: 1.1rem; font-weight: 700; color: #fff; }
-        main { max-width: 1100px; margin: 32px auto; padding: 0 16px; }
-        .card { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); padding: 24px; margin-bottom: 24px; }
-        .btn { display: inline-block; padding: 8px 18px; border-radius: 6px; text-decoration: none; font-size: 0.9rem; cursor: pointer; border: none; }
-        .btn-primary { background: #2b6cb0; color: #fff; }
-        .btn-primary:hover { background: #2c5282; }
-        .btn-danger  { background: #c53030; color: #fff; }
-        .messages { margin-bottom: 16px; }
-        .message { padding: 10px 16px; border-radius: 6px; margin-bottom: 8px; }
-        .message.error   { background: #fed7d7; color: #9b2c2c; }
-        .message.success { background: #c6f6d5; color: #276749; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        th, td { padding: 10px 14px; border-bottom: 1px solid #e2e8f0; text-align: left; }
-        th { background: #ebf4ff; font-weight: 600; }
-        .badge { padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 600; }
-        .badge-pending    { background: #fef3c7; color: #92400e; }
-        .badge-assigned   { background: #dbeafe; color: #1e40af; }
-        .badge-in_progress{ background: #ede9fe; color: #5b21b6; }
-        .badge-resolved   { background: #d1fae5; color: #065f46; }
-        .badge-closed     { background: #e2e8f0; color: #4a5568; }
-        form label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.88rem; }
-        form input, form select, form textarea {
-            width: 100%; padding: 8px 12px; border: 1px solid #cbd5e0;
-            border-radius: 6px; margin-bottom: 14px; font-size: 0.9rem;
-        }
-        form input:focus, form select:focus, form textarea:focus {
-            outline: none; border-color: #4299e1; box-shadow: 0 0 0 2px rgba(66,153,225,.2);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Campus Portal{% endblock %}</title>
+<style>
+:root{--sidebar:#1e293b;--sidebar-hover:#334155;--accent:#3b82f6;--accent-dark:#2563eb;--bg:#f1f5f9;--card:#ffffff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--info:#3b82f6;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+/* ── Sidebar ── */
+.sidebar{width:240px;min-height:100vh;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;transition:transform .3s;}
+.sidebar-brand{padding:20px 20px 16px;border-bottom:1px solid #334155;}
+.sidebar-brand .brand-icon{font-size:1.5rem;margin-bottom:4px;}
+.sidebar-brand h1{font-size:1rem;font-weight:700;color:#f1f5f9;line-height:1.3;}
+.sidebar-brand p{font-size:0.72rem;color:#94a3b8;margin-top:2px;}
+.sidebar-nav{flex:1;padding:12px 0;overflow-y:auto;}
+.nav-section{padding:8px 16px 4px;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b;}
+.nav-link{display:flex;align-items:center;gap:10px;padding:9px 20px;color:#cbd5e1;text-decoration:none;font-size:0.875rem;transition:all .15s;border-left:3px solid transparent;}
+.nav-link:hover{background:var(--sidebar-hover);color:#f1f5f9;border-left-color:#64748b;}
+.nav-link.active{background:#1d4ed8;color:#fff;border-left-color:var(--accent);}
+.nav-link .icon{width:18px;text-align:center;font-size:0.95rem;}
+.sidebar-footer{padding:16px 20px;border-top:1px solid #334155;}
+.user-info{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.9rem;flex-shrink:0;}
+.user-details .name{font-size:0.82rem;font-weight:600;color:#f1f5f9;}
+.user-details .role-badge{font-size:0.68rem;background:#334155;color:#94a3b8;padding:1px 7px;border-radius:10px;text-transform:capitalize;}
+.logout-btn{display:block;text-align:center;padding:7px;background:#334155;color:#cbd5e1;text-decoration:none;border-radius:6px;font-size:0.8rem;transition:background .15s;}
+.logout-btn:hover{background:#475569;color:#fff;}
+/* ── Main ── */
+.main-wrap{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:1.15rem;font-weight:700;color:var(--text);}
+.topbar-sub{font-size:0.8rem;color:var(--muted);margin-top:1px;}
+.page-content{padding:24px 28px;flex:1;}
+/* ── Cards ── */
+.card{background:var(--card);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);padding:24px;margin-bottom:20px;}
+.card-sm{background:var(--card);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:16px;}
+.stat-card{background:var(--card);border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-left:4px solid var(--accent);}
+.stat-card .stat-value{font-size:2rem;font-weight:800;line-height:1;}
+.stat-card .stat-label{font-size:0.78rem;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:24px;}
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;font-size:0.875rem;font-weight:500;text-decoration:none;cursor:pointer;border:none;transition:all .15s;}
+.btn-primary{background:var(--accent);color:#fff;}.btn-primary:hover{background:var(--accent-dark);}
+.btn-success{background:var(--success);color:#fff;}.btn-success:hover{background:#059669;}
+.btn-warning{background:var(--warning);color:#fff;}.btn-warning:hover{background:#d97706;}
+.btn-danger{background:var(--danger);color:#fff;}.btn-danger:hover{background:#dc2626;}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}.btn-ghost:hover{background:var(--bg);}
+.btn-sm{padding:5px 11px;font-size:0.8rem;}
+/* ── Tables ── */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.875rem;}
+th{background:#f8fafc;font-weight:600;color:var(--muted);font-size:0.75rem;text-transform:uppercase;letter-spacing:.05em;padding:10px 14px;border-bottom:1px solid var(--border);text-align:left;}
+td{padding:12px 14px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+tr:hover td{background:#f8fafc;}
+tr:last-child td{border-bottom:none;}
+/* ── Badges ── */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.73rem;font-weight:600;text-transform:capitalize;}
+.badge-pending{background:#fef3c7;color:#92400e;}
+.badge-assigned{background:#dbeafe;color:#1e40af;}
+.badge-in_progress{background:#ede9fe;color:#5b21b6;}
+.badge-resolved{background:#d1fae5;color:#065f46;}
+.badge-closed{background:#f1f5f9;color:#475569;}
+.badge-admin{background:#fee2e2;color:#991b1b;}
+.badge-staff{background:#e0f2fe;color:#0c4a6e;}
+.badge-faculty{background:#fce7f3;color:#9d174d;}
+.badge-student{background:#f0fdf4;color:#14532d;}
+/* ── Forms ── */
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:0.82rem;font-weight:600;color:var(--text);margin-bottom:5px;}
+.form-control{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:0.875rem;color:var(--text);background:#fff;transition:border-color .15s,box-shadow .15s;}
+.form-control:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.15);}
+/* ── Messages ── */
+.messages-wrap{position:fixed;top:16px;right:16px;z-index:999;display:flex;flex-direction:column;gap:8px;max-width:360px;}
+.message{padding:12px 16px;border-radius:8px;font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,.15);display:flex;align-items:center;gap:10px;animation:slideIn .25s ease;}
+.message.success{background:#d1fae5;color:#065f46;border-left:4px solid var(--success);}
+.message.error{background:#fee2e2;color:#991b1b;border-left:4px solid var(--danger);}
+.message.warning{background:#fef3c7;color:#92400e;border-left:4px solid var(--warning);}
+.message.info{background:#dbeafe;color:#1e40af;border-left:4px solid var(--info);}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+/* ── Progress bar ── */
+.progress{height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;}
+.progress-bar{height:100%;border-radius:4px;transition:width .3s;}
+/* ── Timeline ── */
+.timeline{position:relative;padding-left:28px;}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border);}
+.timeline-item{position:relative;margin-bottom:16px;}
+.timeline-dot{position:absolute;left:-24px;top:4px;width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 0 0 2px var(--accent);}
+.timeline-content{background:#f8fafc;border-radius:8px;padding:10px 14px;border:1px solid var(--border);}
+/* ── Misc ── */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.section-title{font-size:1rem;font-weight:700;color:var(--text);}
+.divider{height:1px;background:var(--border);margin:20px 0;}
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-state .empty-icon{font-size:3rem;margin-bottom:12px;}
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:20px;padding:16px;background:#fff;border-radius:10px;border:1px solid var(--border);}
+.filter-bar .form-group{margin-bottom:0;flex:1;min-width:160px;}
+@media(max-width:768px){.sidebar{transform:translateX(-100%)}.main-wrap{margin-left:0}.stats-grid{grid-template-columns:1fr 1fr}}
+</style>
 </head>
 <body>
-<nav>
-    <span class="nav-brand">🎓 Campus Complaint Portal</span>
-    <div>
-        {% if user.is_authenticated %}
-            <a href="{% url 'dashboard:home' %}">Dashboard</a>
-            <a href="{% url 'submission_monitoring:submit' %}">Submit</a>
-            <a href="{% url 'status_caching:my_complaints' %}">My Complaints</a>
-            {% if user.role == 'admin' %}
-                <a href="{% url 'submission_monitoring:list' %}">All Complaints</a>
-                <a href="{% url 'dashboard:scheduling' %}">Scheduler</a>
-            {% endif %}
-            <a href="{% url 'automation_auth:logout' %}">Logout ({{ user.username }})</a>
-        {% else %}
-            <a href="{% url 'automation_auth:login' %}">Login</a>
-            <a href="{% url 'automation_auth:register' %}">Register</a>
-        {% endif %}
-    </div>
-</nav>
-<main>
-    {% if messages %}
-    <div class="messages">
-        {% for msg in messages %}
-        <div class="message {{ msg.tags }}">{{ msg }}</div>
-        {% endfor %}
-    </div>
+{% if user.is_authenticated %}
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🎓</div>
+    <h1>Campus Complaint Portal</h1>
+    <p>Management System</p>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">General</div>
+    <a class="nav-link" href="{% url 'dashboard:home' %}"><span class="icon">📊</span> Dashboard</a>
+
+    <div class="nav-section">Complaints</div>
+    <a class="nav-link" href="{% url 'submission_monitoring:submit' %}"><span class="icon">📝</span> Submit</a>
+    <a class="nav-link" href="{% url 'status_caching:my_complaints' %}"><span class="icon">📂</span> My Complaints</a>
+
+    {% if user.role == 'staff' %}
+    <div class="nav-section">Staff</div>
+    <a class="nav-link" href="{% url 'automation_auth:staff_dashboard' %}"><span class="icon">🛠️</span> My Tasks</a>
     {% endif %}
+
+    {% if user.role == 'admin' %}
+    <div class="nav-section">Admin</div>
+    <a class="nav-link" href="{% url 'submission_monitoring:list' %}"><span class="icon">📋</span> All Complaints</a>
+    <a class="nav-link" href="{% url 'dashboard:queue' %}"><span class="icon">⚡</span> Queue Processor</a>
+    <a class="nav-link" href="{% url 'dashboard:bulk_assign' %}"><span class="icon">🚀</span> Bulk Assign</a>
+    <a class="nav-link" href="{% url 'dashboard:compare' %}"><span class="icon">🔬</span> Compare Algorithms</a>
+    <a class="nav-link" href="{% url 'dashboard:scheduling' %}"><span class="icon">⏱️</span> Scheduler Demo</a>
+    <div class="nav-section">Monitoring</div>
+    <a class="nav-link" href="{% url 'concurrency_transactions:workload' %}"><span class="icon">👥</span> Staff Workload</a>
+    <a class="nav-link" href="{% url 'status_caching:cache_stats' %}"><span class="icon">💾</span> Cache Stats</a>
+    <a class="nav-link" href="{% url 'file_engine:logs' %}"><span class="icon">📜</span> System Logs</a>
+    {% endif %}
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar">{{ user.first_name.0|default:user.username.0|upper }}</div>
+      <div class="user-details">
+        <div class="name">{{ user.get_full_name|default:user.username }}</div>
+        <span class="role-badge">{{ user.role }}</span>
+      </div>
+    </div>
+    <a class="logout-btn" href="{% url 'automation_auth:logout' %}">Sign Out</a>
+  </div>
+</aside>
+{% endif %}
+
+<div class="main-wrap" {% if not user.is_authenticated %}style="margin-left:0"{% endif %}>
+  {% if messages %}
+  <div class="messages-wrap">
+    {% for msg in messages %}
+    <div class="message {{ msg.tags }}">{{ msg }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">{% block page_title %}{% endblock %}</div>
+      <div class="topbar-sub">{% block page_sub %}{% endblock %}</div>
+    </div>
+    <div>{% block topbar_actions %}{% endblock %}</div>
+  </div>
+
+  <div class="page-content">
     {% block content %}{% endblock %}
-</main>
+  </div>
+</div>
 </body>
 </html>

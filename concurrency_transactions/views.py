@@ -1,5 +1,5 @@
 """
-Module 1 Views: Ticket assignment with ACID transaction + mutex pattern.
+Module 1 Views: Atomic ticket assignment + Staff Workload admin view.
 """
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -12,75 +12,67 @@ from .models import StaffWorkload, AssignmentLog
 
 @login_required
 def assign_ticket(request, complaint_id):
-    """
-    Atomically assigns a complaint to a staff member.
-
-    ACID Transaction:
-      1. Lock the complaint row (SELECT FOR UPDATE — acts as a mutex).
-      2. Lock the staff workload row.
-      3. Update complaint status + assigned_to.
-      4. Increment staff active_count.
-      5. Write AssignmentLog entry.
-      If ANY step raises an exception → entire transaction rolls back.
-
-    OS Concept: SELECT FOR UPDATE mimics a mutex/semaphore —
-    prevents two admins from simultaneously assigning the same ticket.
-    """
     complaint = get_object_or_404(Complaint, id=complaint_id)
-
     if not request.user.is_admin():
-        messages.error(request, 'Only admins can assign tickets.')
-        return redirect('submission_monitoring:list')
-
-    available_staff = CampusUser.objects.filter(
-        role='staff'
-    ).select_related('workload')
-
-    if request.method == 'POST':
-        staff_id = request.POST.get('staff_id')
-        notes    = request.POST.get('notes', '')
-
+        messages.error(request, "Only admins can assign tickets.")
+        return redirect("submission_monitoring:list")
+    available_staff = CampusUser.objects.filter(role="staff").select_related("workload")
+    if request.method == "POST":
+        staff_id = request.POST.get("staff_id")
+        notes    = request.POST.get("notes", "")
         try:
             with transaction.atomic():
-                # Mutex: lock both rows before any modification
                 locked_complaint = Complaint.objects.select_for_update().get(id=complaint_id)
-                staff = CampusUser.objects.get(id=staff_id, role='staff')
+                staff = CampusUser.objects.get(id=staff_id, role="staff")
                 workload, _ = StaffWorkload.objects.select_for_update().get_or_create(
-                    staff=staff,
-                    defaults={'active_count': 0, 'max_capacity': 5}
+                    staff=staff, defaults={"active_count": 0, "max_capacity": 5}
                 )
-
                 if not workload.is_available():
-                    raise ValueError(f'{staff.get_full_name()} is at full capacity.')
-
+                    raise ValueError(staff.get_full_name() + " is at full capacity.")
                 prev_status = locked_complaint.status
-
-                # Atomic updates
                 locked_complaint.assigned_to = staff
-                locked_complaint.status = 'assigned'
+                locked_complaint.status = "assigned"
                 locked_complaint.save()
-
                 workload.active_count += 1
                 workload.save()
-
                 AssignmentLog.objects.create(
-                    complaint=locked_complaint,
-                    assigned_by=request.user,
-                    assigned_to=staff,
-                    previous_status=prev_status,
-                    new_status='assigned',
-                    notes=notes,
+                    complaint=locked_complaint, assigned_by=request.user,
+                    assigned_to=staff, previous_status=prev_status,
+                    new_status="assigned", notes=notes,
                 )
-
-            messages.success(request, f'Ticket assigned to {staff.get_full_name()}.')
-            return redirect('submission_monitoring:list')
-
+            messages.success(request, "Ticket assigned to " + staff.get_full_name() + ".")
+            return redirect("submission_monitoring:list")
         except ValueError as e:
             messages.error(request, str(e))
         except Exception as e:
-            messages.error(request, f'Assignment failed and was rolled back: {str(e)}')
+            messages.error(request, "Assignment failed and was rolled back: " + str(e))
+    return render(request, "concurrency_transactions/assign.html", {
+        "complaint": complaint,
+        "available_staff": available_staff,
+    })
 
-    return render(request, 'concurrency_transactions/assign.html', {
-        'complaint': complaint,
-        'available_staff': available_staff,
+
+@login_required
+def staff_workload_view(request):
+    if not request.user.is_admin():
+        from django.http import Http404
+        raise Http404
+    staff_users = CampusUser.objects.filter(role="staff")
+    workloads = []
+    full_count = 0
+    available_count = 0
+    for s in staff_users:
+        wl, _ = StaffWorkload.objects.get_or_create(
+            staff=s, defaults={"active_count": 0, "max_capacity": 5}
+        )
+        pct = round((wl.active_count / wl.max_capacity) * 100) if wl.max_capacity else 0
+        workloads.append({"user": s, "workload": wl, "pct": pct})
+        if wl.active_count >= wl.max_capacity:
+            full_count += 1
+        else:
+            available_count += 1
+    return render(request, "concurrency_transactions/workload.html", {
+        "workloads": workloads,
+        "full_count": full_count,
+        "available_count": available_count,
     })
