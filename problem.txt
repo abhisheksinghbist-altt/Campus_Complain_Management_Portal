@@ -1,0 +1,105 @@
+PROBLEM REPORT — Campus Complaint Management Portal
+====================================================
+Date: 2025-07-14
+Project: univ_complian_ms (Django + PostgreSQL)
+
+
+PROBLEMS ENCOUNTERED
+--------------------
+
+1. MISSING VIRTUAL ENVIRONMENT
+   Problem : No Python virtual environment existed in the project folder.
+             Running the server would rely on system-wide packages, which
+             could conflict with other projects or miss required versions.
+   Fix     : Created a virtual environment using:
+               python -m venv venv
+             Installed all dependencies from requirements.txt into it:
+               venv\Scripts\pip install -r requirements.txt
+             Packages installed: Django 5.2.12, psycopg2-binary 2.9.12,
+             asgiref, sqlparse, tzdata.
+
+
+2. INCOMPLETE settings.py
+   Problem : campus_portal/settings.py only contained three settings:
+               - DEBUG = False
+               - ALLOWED_HOSTS
+               - DATABASES
+             It was missing every other required Django setting, so the
+             project could not start at all. Running any manage.py command
+             raised:
+               ImproperlyConfigured: The SECRET_KEY setting must not be empty.
+   Fix     : Rewrote settings.py with all required configuration:
+               - SECRET_KEY (development key)
+               - DEBUG = True (development mode)
+               - INSTALLED_APPS listing all 6 project modules plus
+                 Django built-ins (admin, auth, contenttypes, sessions,
+                 messages, staticfiles)
+               - MIDDLEWARE stack
+               - TEMPLATES with correct DIRS and context processors
+               - WSGI_APPLICATION
+               - AUTH_PASSWORD_VALIDATORS
+               - LANGUAGE_CODE, TIME_ZONE (Asia/Kolkata), USE_TZ
+               - STATIC_URL, STATICFILES_DIRS, STATIC_ROOT
+               - MEDIA_URL, MEDIA_ROOT
+               - DEFAULT_AUTO_FIELD
+               - LOGIN_URL, LOGIN_REDIRECT_URL, LOGOUT_REDIRECT_URL
+
+
+3. MISSING AUTH_USER_MODEL
+   Problem : The project defines a custom user model CampusUser in
+             automation_auth/models.py that extends AbstractUser.
+             Without AUTH_USER_MODEL declared in settings.py, Django
+             kept the default auth.User model active alongside
+             CampusUser, causing reverse accessor clashes:
+               fields.E304 — Reverse accessor Group.user_set clashes
+               between auth.User.groups and automation_auth.CampusUser.groups.
+             Same clash on user_permissions. Four errors total.
+   Fix     : Added to settings.py:
+               AUTH_USER_MODEL = "automation_auth.CampusUser"
+             This tells Django to use CampusUser as the sole auth model,
+             removing the clash entirely.
+             After this fix, python manage.py check reported:
+               System check identified no issues (0 silenced).
+
+
+4. DATABASE NOT MIGRATED
+   Problem : No tables existed in campus_portal_db. The server returned
+             a 500 error on every request because Django could not query
+             any table (django_session, auth_*, campus_users, complaints, etc.).
+   Fix     : Ran migrations after settings were corrected:
+               python manage.py migrate
+             Applied 26 migrations across all apps:
+               contenttypes, auth, automation_auth, admin,
+               submission_monitoring, analytics_scheduling,
+               concurrency_transactions, file_engine, sessions, status_caching.
+
+
+5. NO INITIAL DATA
+   Problem : The complaint category table was empty. The application
+             requires pre-seeded categories (e.g. Electrical, Plumbing)
+             for the complaint submission form to work.
+   Fix     : Loaded the bundled fixture:
+               python manage.py loaddata initial_categories
+             Installed 6 category objects into the database.
+
+
+6. NO SUPERUSER / ADMIN ACCOUNT
+   Problem : No user account existed, so the admin panel and all
+             role-protected views were inaccessible.
+   Fix     : Created a superuser non-interactively via Django shell:
+               username : admin
+               password : admin123
+               email    : admin@campus.edu
+               role     : admin
+
+
+FINAL STATE
+-----------
+  - Virtual environment : project/venv/
+  - Server URL          : http://127.0.0.1:8000
+  - Login page          : http://127.0.0.1:8000/auth/login/  (HTTP 200)
+  - Admin panel         : http://127.0.0.1:8000/admin/
+  - Admin credentials   : admin / admin123
+  - Database            : campus_portal_db (PostgreSQL 18, all tables created)
+  - Categories loaded   : 6
+

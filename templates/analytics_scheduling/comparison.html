@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Algorithm Comparison{% endblock %}
+{% block content %}
+<h2 style="margin-bottom:6px">Algorithm Comparison</h2>
+<p style="color:#718096;margin-bottom:20px">
+  The same {{ total_pending }} pending complaint(s) ordered three different ways.
+  This is a read-only view -- no assignments are made here.
+</p>
+
+<!-- Summary -->
+<div style="display:flex;gap:14px;margin-bottom:24px">
+  <div class="card" style="flex:1;text-align:center;padding:12px;border-top:3px solid #d69e2e">
+    <strong style="font-size:1.4rem;color:#d69e2e">{{ total_pending }}</strong>
+    <div style="color:#718096;font-size:0.85rem">Pending Complaints</div>
+  </div>
+  <div class="card" style="flex:1;text-align:center;padding:12px;border-top:3px solid #276749">
+    <strong style="font-size:1.4rem;color:#276749">{{ staff_count }}</strong>
+    <div style="color:#718096;font-size:0.85rem">Available Staff</div>
+  </div>
+  <div class="card" style="flex:1;padding:12px;display:flex;align-items:center">
+    <a href="{% url "dashboard:bulk_assign" %}" class="btn btn-primary" style="width:100%;text-align:center">
+      Go to Bulk Assign
+    </a>
+  </div>
+</div>
+
+<!-- Three algorithm columns -->
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+{% for key, label, desc, queue in queues %}
+<div class="card" style="padding:16px">
+  <h3 style="margin-bottom:4px;font-size:1rem">
+    {% if key == "priority" %}Priority Scheduling
+    {% elif key == "sjf" %}Shortest Job First
+    {% else %}First Come First Served{% endif %}
+  </h3>
+  <p style="font-size:0.78rem;color:#718096;margin-bottom:12px">{{ desc }}</p>
+  <ol style="padding-left:18px;font-size:0.88rem">
+  {% for c in queue %}
+    <li style="padding:6px 0;border-bottom:1px solid #e2e8f0">
+      <div style="font-weight:600">{{ c.title }}</div>
+      <div style="color:#718096;font-size:0.78rem">
+        {{ c.category.name }}
+        &nbsp;|&nbsp; P{{ c.category.priority }}
+        &nbsp;|&nbsp; {{ c.category.avg_resolution_hours }}h
+        &nbsp;|&nbsp; {{ c.submitted_at|date:"d M H:i" }}
+      </div>
+    </li>
+  {% empty %}
+    <li style="color:#a0aec0">No pending complaints</li>
+  {% endfor %}
+  </ol>
+</div>
+{% endfor %}
+</div>
+
+<!-- Explanation cards -->
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px">
+  <div class="card" style="padding:16px;border-top:4px solid #c53030">
+    <h4>Priority Scheduling</h4>
+    <p style="font-size:0.82rem;color:#718096;margin-top:8px">
+      Each complaint category has a priority number (1=Critical, 4=Low).
+      Complaints with lower numbers are served first, regardless of when
+      they were submitted. Matches preemptive priority scheduling in OS.
+    </p>
+  </div>
+  <div class="card" style="padding:16px;border-top:4px solid #d69e2e">
+    <h4>Shortest Job First (SJF)</h4>
+    <p style="font-size:0.82rem;color:#718096;margin-top:8px">
+      Complaint whose category historically takes the fewest hours to resolve
+      is served first. Minimises average waiting time. Matches SJF / SRTF in OS.
+    </p>
+  </div>
+  <div class="card" style="padding:16px;border-top:4px solid #2b6cb0">
+    <h4>First Come First Served</h4>
+    <p style="font-size:0.82rem;color:#718096;margin-top:8px">
+      Oldest complaint is served first. Simple and fair but can cause
+      priority inversion (a critical complaint waits behind older low-priority ones).
+      Baseline algorithm for comparison.
+    </p>
+  </div>
+</div>
+{% endblock %}

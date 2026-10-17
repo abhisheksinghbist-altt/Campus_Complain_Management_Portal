@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Update Status{% endblock %}
+{% block page_title %}Update Status{% endblock %}
+{% block page_sub %}Complaint #{{ complaint.id }} — {{ complaint.title }}{% endblock %}
+{% block content %}
+<div style="max-width:480px;">
+<div class="card">
+  <div style="margin-bottom:16px;padding:14px;background:#f8fafc;border-radius:8px;font-size:0.875rem;">
+    <div><strong>{{ complaint.title }}</strong></div>
+    <div style="color:var(--muted);margin-top:4px;">Current: <span class="badge badge-{{ complaint.status }}">{{ complaint.get_status_display }}</span></div>
+  </div>
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label>New Status</label>
+      <select class="form-control" name="status">
+        {% for val, label in status_choices %}
+        <option value="{{ val }}" {% if val == complaint.status %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Note (optional)</label>
+      <textarea class="form-control" name="note" rows="3" placeholder="Add a note about this update..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" type="submit">Save Update</button>
+      <a href="{% url 'status_caching:track' complaint.id %}" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+</div>
+{% endblock %}

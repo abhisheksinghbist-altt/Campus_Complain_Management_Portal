@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Submit Complaint{% endblock %}
+{% block page_title %}Submit a Complaint{% endblock %}
+{% block page_sub %}Describe the issue and we will get it resolved{% endblock %}
+{% block content %}
+<div style="max-width:640px;">
+<div class="card">
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label>Title <span style="color:var(--danger)">*</span></label>
+      <input class="form-control" type="text" name="title" required placeholder="Brief summary of the issue" maxlength="200">
+    </div>
+    <div class="form-group">
+      <label>Description <span style="color:var(--danger)">*</span></label>
+      <textarea class="form-control" name="description" rows="5" required placeholder="Describe the problem in detail — location, what happened, urgency..."></textarea>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="form-group">
+        <label>Category <span style="color:var(--danger)">*</span></label>
+        <select class="form-control" name="category" required>
+          <option value="">— Select Category —</option>
+          {% for cat in categories %}
+          <option value="{{ cat.id }}">{{ cat.name }} (P{{ cat.priority }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Location</label>
+        <select class="form-control" name="location">
+          <option value="classroom">Classroom</option>
+          <option value="hostel">Hostel</option>
+          <option value="lab">Lab</option>
+          <option value="office">Office</option>
+          <option value="canteen">Canteen</option>
+          <option value="library">Library</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Location Detail</label>
+      <input class="form-control" type="text" name="location_detail" placeholder="e.g. Room 204, Block A">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px;">
+      <button class="btn btn-primary" type="submit">Submit Complaint</button>
+      <a href="{% url 'status_caching:my_complaints' %}" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+</div>
+{% endblock %}

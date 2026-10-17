@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Smart Assignment Result{% endblock %}
+{% block page_title %}Smart Auto-Assignment Result{% endblock %}
+{% block page_sub %}All 3 algorithms ran — here is why {{ result.algorithm|upper }} won{% endblock %}
+{% block topbar_actions %}
+  <a href="{% url 'submission_monitoring:detail' complaint.id %}" class="btn btn-primary btn-sm">View Complaint</a>
+{% endblock %}
+{% block content %}
+
+<!-- Top result banner -->
+<div class="card" style="border-left:5px solid {% if result.success %}var(--success){% else %}var(--warning){% endif %};margin-bottom:20px;">
+  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+    <div style="font-size:2.5rem;">{% if result.success %}✅{% else %}⏳{% endif %}</div>
+    <div style="flex:1;">
+      <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:2px;">
+        Winning Algorithm
+      </div>
+      <div style="font-size:1.4rem;font-weight:800;color:{% if result.success %}var(--success){% else %}var(--warning){% endif %};">
+        {% if result.algorithm == "priority" %}Priority Scheduling
+        {% elif result.algorithm == "sjf" %}Shortest Job First (SJF)
+        {% else %}First Come First Served (FCFS){% endif %}
+      </div>
+      <div style="font-size:0.875rem;color:var(--muted);margin-top:2px;">{{ result.reason }}</div>
+    </div>
+    <div style="text-align:right;">
+      {% if result.success %}
+        <div style="font-size:0.75rem;color:var(--muted);">Assigned to</div>
+        <div style="font-size:1.1rem;font-weight:700;color:var(--success);">{{ result.assigned_to }}</div>
+      {% else %}
+        <div style="font-size:0.875rem;color:var(--warning);">No staff available</div>
+        <div style="font-size:0.8rem;color:var(--muted);">Complaint stays in queue</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Context row -->
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+  <div class="stat-card" style="border-left-color:#3b82f6;">
+    <div class="stat-value" style="color:#3b82f6;">{{ result.queue_len }}</div>
+    <div class="stat-label">Queue Length</div>
+  </div>
+  <div class="stat-card" style="border-left-color:#10b981;">
+    <div class="stat-value" style="color:#10b981;">{{ result.staff_available }}/{{ result.total_staff }}</div>
+    <div class="stat-label">Staff Available</div>
+  </div>
+  <div class="stat-card" style="border-left-color:{% if result.utilisation >= 80 %}var(--danger){% elif result.utilisation >= 60 %}var(--warning){% else %}var(--success){% endif %};">
+    <div class="stat-value" style="color:{% if result.utilisation >= 80 %}var(--danger){% elif result.utilisation >= 60 %}var(--warning){% else %}var(--success){% endif %};">{{ result.utilisation }}%</div>
+    <div class="stat-label">Staff Utilisation</div>
+  </div>
+  <div class="stat-card" style="border-left-color:#8b5cf6;">
+    <div class="stat-value" style="color:#8b5cf6;">P{{ result.priority_val }}</div>
+    <div class="stat-label">Category Priority</div>
+  </div>
+</div>
+
+<!-- Algorithm score breakdown -->
+<div class="card" style="margin-bottom:20px;">
+  <div class="section-header" style="margin-bottom:20px;">
+    <div class="section-title">Algorithm Score Breakdown</div>
+    <span style="font-size:0.8rem;color:var(--muted);">Higher score = better fit for this complaint</span>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:16px;">
+  {% for key, data in sorted_scores %}
+  <div style="border:2px solid {% if key == result.algorithm %}var(--accent){% else %}var(--border){% endif %};border-radius:10px;padding:16px;position:relative;{% if key == result.algorithm %}background:#eff6ff;{% endif %}">
+
+    {% if key == result.algorithm %}
+    <div style="position:absolute;top:-10px;right:16px;background:var(--accent);color:#fff;font-size:0.7rem;font-weight:700;padding:2px 10px;border-radius:10px;text-transform:uppercase;">
+      ✓ Selected
+    </div>
+    {% endif %}
+
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <!-- Algorithm icon + name -->
+      <div style="min-width:180px;">
+        <div style="font-size:1.2rem;margin-bottom:2px;">
+          {% if key == "priority" %}🚨{% elif key == "sjf" %}⚡{% else %}🕐{% endif %}
+        </div>
+        <div style="font-weight:700;font-size:0.95rem;">{{ data.label }}</div>
+      </div>
+
+      <!-- Score bar -->
+      <div style="flex:1;min-width:200px;">
+        <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--muted);margin-bottom:4px;">
+          <span>Score</span>
+          <span style="font-weight:700;font-size:0.9rem;color:{% if key == result.algorithm %}var(--accent){% else %}var(--text){% endif %};">{{ data.score }} pts</span>
+        </div>
+        <div class="progress" style="height:14px;background:#e2e8f0;">
+          <div class="progress-bar" style="
+            width:{% if max_score > 0 %}{% widthratio data.score max_score 100 %}%{% else %}0%{% endif %};
+            background:{% if key == result.algorithm %}var(--accent){% else %}#94a3b8{% endif %};
+            transition:width .6s ease;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Reason -->
+      <div style="flex:1;min-width:220px;font-size:0.82rem;color:var(--muted);padding-left:8px;border-left:2px solid var(--border);">
+        {{ data.reason }}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  </div>
+</div>
+
+<!-- How it works explainer -->
+<div class="card" style="background:#f8fafc;">
+  <div class="section-title" style="margin-bottom:14px;">How the Selection Works</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;font-size:0.82rem;">
+    <div style="padding:14px;background:#fff;border-radius:8px;border-top:3px solid #ef4444;">
+      <div style="font-weight:700;margin-bottom:6px;">🚨 Priority Scheduling wins when...</div>
+      <div style="color:var(--muted);line-height:1.6;">
+        Category is Critical (P1) or High (P2). Urgent issues must jump the queue regardless of when they arrived or how long they take.
+      </div>
+    </div>
+    <div style="padding:14px;background:#fff;border-radius:8px;border-top:3px solid #f59e0b;">
+      <div style="font-weight:700;margin-bottom:6px;">⚡ SJF wins when...</div>
+      <div style="color:var(--muted);line-height:1.6;">
+        The category resolves quickly (≤4h) AND staff have spare capacity. Clearing fast jobs first frees up staff for harder ones.
+      </div>
+    </div>
+    <div style="padding:14px;background:#fff;border-radius:8px;border-top:3px solid #3b82f6;">
+      <div style="font-weight:700;margin-bottom:6px;">🕐 FCFS wins when...</div>
+      <div style="color:var(--muted);line-height:1.6;">
+        The complaint is old and waiting, or staff are heavily loaded (≥80%). Ensures no complaint is starved in a busy system.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Actions -->
+<div style="display:flex;gap:10px;margin-top:4px;">
+  <a href="{% url 'submission_monitoring:detail' complaint.id %}" class="btn btn-primary">View Full Complaint</a>
+  <a href="{% url 'status_caching:my_complaints' %}" class="btn btn-ghost">My Complaints</a>
+  <a href="{% url 'submission_monitoring:submit' %}" class="btn btn-ghost">Submit Another</a>
+</div>
+
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Complaint #{{ complaint.id }}{% endblock %}
+{% block page_title %}Complaint #{{ complaint.id }}{% endblock %}
+{% block page_sub %}{{ complaint.title }}{% endblock %}
+{% block topbar_actions %}
+  <a href="javascript:history.back()" class="btn btn-ghost btn-sm">← Back</a>
+{% endblock %}
+{% block content %}
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;">
+  <div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <h2 style="font-size:1.1rem;font-weight:700;">{{ complaint.title }}</h2>
+        <span class="badge badge-{{ complaint.status }}" style="font-size:0.82rem;">{{ complaint.get_status_display }}</span>
+      </div>
+      <p style="color:var(--muted);line-height:1.7;font-size:0.9rem;">{{ complaint.description }}</p>
+      <div class="divider"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.875rem;">
+        <div><span style="color:var(--muted);">Category</span><br><strong>{{ complaint.category.name }}</strong></div>
+        <div><span style="color:var(--muted);">Location</span><br><strong>{{ complaint.get_location_display }}{% if complaint.location_detail %} — {{ complaint.location_detail }}{% endif %}</strong></div>
+        <div><span style="color:var(--muted);">Submitted by</span><br><strong>{{ complaint.submitter.get_full_name }}</strong></div>
+        <div><span style="color:var(--muted);">Assigned to</span><br><strong>{{ complaint.assigned_to.get_full_name|default:"Not assigned yet" }}</strong></div>
+        <div><span style="color:var(--muted);">Submitted on</span><br><strong>{{ complaint.submitted_at|date:"d M Y, H:i" }}</strong></div>
+        {% if complaint.resolved_at %}
+        <div><span style="color:var(--muted);">Resolved on</span><br><strong>{{ complaint.resolved_at|date:"d M Y, H:i" }}</strong></div>
+        {% endif %}
+        {% if complaint.resolution_hours %}
+        <div><span style="color:var(--muted);">Resolution time</span><br><strong style="color:var(--success);">{{ complaint.resolution_hours }} hrs</strong></div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if user == complaint.assigned_to or user.role == 'admin' %}
+    <div class="card" style="padding:16px;">
+      <div style="display:flex;gap:10px;">
+        <a href="{% url 'status_caching:update_status' complaint.id %}" class="btn btn-primary">Update Status</a>
+        {% if user.role == 'admin' and complaint.status == 'pending' %}
+        <a href="{% url 'concurrency_transactions:assign' complaint.id %}" class="btn btn-success">Assign to Staff</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if complaint.status == 'resolved' and user == complaint.submitter and not complaint.rating %}
+    <div class="card" style="border:2px solid #d1fae5;">
+      <h3 style="font-size:0.95rem;margin-bottom:10px;">Rate the Resolution</h3>
+      <form method="post" action="{% url 'submission_monitoring:rate' complaint.id %}">
+        {% csrf_token %}
+        <div style="display:flex;gap:8px;margin-bottom:12px;font-size:1.5rem;">
+          {% for i in "12345" %}
+          <label style="cursor:pointer;">
+            <input type="radio" name="rating" value="{{ forloop.counter }}" style="display:none;">
+            <span class="star" data-val="{{ forloop.counter }}" style="cursor:pointer;opacity:0.4;transition:opacity .15s;">⭐</span>
+          </label>
+          {% endfor %}
+        </div>
+        <button class="btn btn-primary btn-sm" type="submit">Submit Rating</button>
+      </form>
+      <script>
+      document.querySelectorAll('.star').forEach(function(s){
+        s.addEventListener('mouseenter',function(){
+          var v=parseInt(this.dataset.val);
+          document.querySelectorAll('.star').forEach(function(x){x.style.opacity=parseInt(x.dataset.val)<=v?'1':'0.3';});
+        });
+      });
+      document.querySelectorAll('input[name=rating]').forEach(function(r){
+        r.addEventListener('change',function(){
+          var v=parseInt(this.value);
+          document.querySelectorAll('.star').forEach(function(x){x.style.opacity=parseInt(x.dataset.val)<=v?'1':'0.3';});
+        });
+      });
+      </script>
+    </div>
+    {% elif complaint.rating %}
+    <div class="card" style="background:#f0fdf4;border:1px solid #d1fae5;">
+      <p style="font-size:0.875rem;color:var(--muted);">Your rating: 
+        {% for i in "12345" %}{% if forloop.counter <= complaint.rating %}⭐{% endif %}{% endfor %}
+      </p>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <div class="section-header"><div class="section-title">Status History</div></div>
+      <div class="timeline">
+      {% for upd in status_history %}
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--muted);margin-bottom:4px;">
+              <span>{{ upd.timestamp|date:"d M Y, H:i" }}</span>
+              <span>by {{ upd.updated_by.get_full_name|default:"System" }}</span>
+            </div>
+            <span class="badge badge-{{ upd.old_status }}">{{ upd.old_status }}</span>
+            <span style="margin:0 6px;color:var(--muted);">→</span>
+            <span class="badge badge-{{ upd.new_status }}">{{ upd.new_status }}</span>
+            {% if upd.note %}<p style="margin-top:6px;font-size:0.82rem;color:var(--muted);">{{ upd.note }}</p>{% endif %}
+          </div>
+        </div>
+      {% empty %}
+        <p style="color:var(--muted);font-size:0.875rem;">No status updates yet.</p>
+      {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="section-header"><div class="section-title">Attachments</div></div>
+      {% for att in attachments %}
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.85rem;">
+        <div>
+          <div style="font-weight:500;">{{ att.original_filename|truncatechars:30 }}</div>
+          <div style="color:var(--muted);font-size:0.75rem;">{{ att.mime_type }} &bull; {{ att.file_size|filesizeformat }}</div>
+        </div>
+        <a href="{% url 'file_engine:download' att.id %}" class="btn btn-ghost btn-sm">↓</a>
+      </div>
+      {% empty %}
+      <p style="color:var(--muted);font-size:0.875rem;">No attachments.</p>
+      {% endfor %}
+      {% if user == complaint.submitter or user.role == 'admin' %}
+      <form method="post" action="{% url 'file_engine:upload' complaint.id %}" enctype="multipart/form-data" style="margin-top:14px;">
+        {% csrf_token %}
+        <input type="file" name="file" class="form-control" style="margin-bottom:8px;" accept=".jpg,.jpeg,.png,.pdf,.mp4">
+        <button class="btn btn-ghost btn-sm" type="submit">Upload File</button>
+      </form>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="margin-bottom:12px;">Priority Info</div>
+      <div style="font-size:0.85rem;">
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--muted);">Priority</span>
+          <span style="font-weight:600;">P{{ complaint.category.priority }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;">
+          <span style="color:var(--muted);">Avg Resolution</span>
+          <span style="font-weight:600;">{{ complaint.category.avg_resolution_hours }}h</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

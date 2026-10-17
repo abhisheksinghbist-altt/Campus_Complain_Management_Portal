@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}My Complaints{% endblock %}
+{% block page_title %}My Complaints{% endblock %}
+{% block page_sub %}Track all your submitted complaints{% endblock %}
+{% block topbar_actions %}<a href="{% url 'submission_monitoring:submit' %}" class="btn btn-primary btn-sm">+ New Complaint</a>{% endblock %}
+{% block content %}
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+  <div class="stat-card" style="border-left-color:#3b82f6;"><div class="stat-value" style="color:#3b82f6;">{{ total_count }}</div><div class="stat-label">Total</div></div>
+  <div class="stat-card" style="border-left-color:#f59e0b;"><div class="stat-value" style="color:#f59e0b;">{{ pending_count }}</div><div class="stat-label">Pending</div></div>
+  <div class="stat-card" style="border-left-color:#8b5cf6;"><div class="stat-value" style="color:#8b5cf6;">{{ active_count }}</div><div class="stat-label">In Progress</div></div>
+  <div class="stat-card" style="border-left-color:#10b981;"><div class="stat-value" style="color:#10b981;">{{ resolved_count }}</div><div class="stat-label">Resolved</div></div>
+</div>
+<div class="card" style="padding:0;overflow:hidden;">
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>#</th><th>Title</th><th>Category</th><th>Status</th><th>Submitted</th><th>Rating</th><th></th></tr></thead>
+    <tbody>
+    {% for c in complaints %}
+    <tr>
+      <td style="color:var(--muted);font-size:0.8rem;">#{{ c.id }}</td>
+      <td><a href="{% url 'submission_monitoring:detail' c.id %}" style="color:var(--text);font-weight:500;text-decoration:none;">{{ c.title|truncatechars:50 }}</a></td>
+      <td style="font-size:0.82rem;">{{ c.category.name }}</td>
+      <td><span class="badge badge-{{ c.status }}">{{ c.get_status_display }}</span></td>
+      <td style="font-size:0.8rem;color:var(--muted);">{{ c.submitted_at|date:"d M Y" }}</td>
+      <td style="font-size:0.85rem;">
+        {% if c.rating %}
+          {% for i in "12345" %}{% if forloop.counter <= c.rating %}⭐{% endif %}{% endfor %}
+        {% elif c.status == 'resolved' %}<span style="color:var(--muted);font-size:0.78rem;">Rate it</span>
+        {% else %}—{% endif %}
+      </td>
+      <td><a href="{% url 'submission_monitoring:detail' c.id %}" class="btn btn-ghost btn-sm">View</a></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📭</div><p>No complaints yet. <a href="{% url 'submission_monitoring:submit' %}">Submit one now.</a></p></div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

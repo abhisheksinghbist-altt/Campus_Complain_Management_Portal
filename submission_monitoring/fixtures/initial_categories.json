@@ -1,0 +1,8 @@
+[
+  {"model": "submission_monitoring.category", "pk": 1, "fields": {"name": "Electrical",  "priority": 1, "avg_resolution_hours": 4.0}},
+  {"model": "submission_monitoring.category", "pk": 2, "fields": {"name": "Plumbing",    "priority": 2, "avg_resolution_hours": 6.0}},
+  {"model": "submission_monitoring.category", "pk": 3, "fields": {"name": "Wi-Fi",       "priority": 2, "avg_resolution_hours": 3.0}},
+  {"model": "submission_monitoring.category", "pk": 4, "fields": {"name": "Classroom",   "priority": 3, "avg_resolution_hours": 8.0}},
+  {"model": "submission_monitoring.category", "pk": 5, "fields": {"name": "Hostel",      "priority": 3, "avg_resolution_hours": 10.0}},
+  {"model": "submission_monitoring.category", "pk": 6, "fields": {"name": "Cleaning",    "priority": 4, "avg_resolution_hours": 12.0}}
+]

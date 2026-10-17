@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Track #{{ complaint.id }}{% endblock %}
+{% block page_title %}Track Complaint #{{ complaint.id }}{% endblock %}
+{% block page_sub %}{{ complaint.title }}{% endblock %}
+{% block topbar_actions %}<a href="{% url 'status_caching:my_complaints' %}" class="btn btn-ghost btn-sm">← My Complaints</a>{% endblock %}
+{% block content %}
+<div style="max-width:700px;">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h2 style="font-size:1rem;font-weight:700;">{{ complaint.title }}</h2>
+      <span class="badge badge-{{ complaint.status }}">{{ complaint.get_status_display }}</span>
+    </div>
+    <p style="color:var(--muted);font-size:0.875rem;line-height:1.6;">{{ complaint.description }}</p>
+    <div class="divider"></div>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;font-size:0.85rem;">
+      <span><strong>Category:</strong> {{ complaint.category.name }}</span>
+      <span><strong>Location:</strong> {{ complaint.get_location_display }}{% if complaint.location_detail %} — {{ complaint.location_detail }}{% endif %}</span>
+      <span><strong>Assigned:</strong> {{ complaint.assigned_to.get_full_name|default:"Unassigned" }}</span>
+    </div>
+    {% if user == complaint.assigned_to or user.role == 'admin' %}
+    <div style="margin-top:16px;">
+      <a href="{% url 'status_caching:update_status' complaint.id %}" class="btn btn-primary btn-sm">Update Status</a>
+    </div>
+    {% endif %}
+  </div>
+  <div class="card">
+    <div class="section-title" style="margin-bottom:16px;">Status Timeline</div>
+    <div class="timeline">
+    {% for upd in status_history %}
+      <div class="timeline-item">
+        <div class="timeline-dot" style="{% if upd.new_status == 'resolved' %}background:var(--success);box-shadow:0 0 0 2px var(--success);{% endif %}"></div>
+        <div class="timeline-content">
+          <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--muted);margin-bottom:6px;">
+            <span>{{ upd.timestamp|date:"d M Y, H:i" }}</span>
+            <span>{{ upd.updated_by.get_full_name|default:"System" }}</span>
+          </div>
+          <span class="badge badge-{{ upd.old_status }}">{{ upd.old_status }}</span>
+          <span style="margin:0 6px;">→</span>
+          <span class="badge badge-{{ upd.new_status }}">{{ upd.new_status }}</span>
+          {% if upd.note %}<p style="margin-top:6px;font-size:0.82rem;color:var(--muted);">{{ upd.note }}</p>{% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <p style="color:var(--muted);">No updates yet.</p>
+    {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

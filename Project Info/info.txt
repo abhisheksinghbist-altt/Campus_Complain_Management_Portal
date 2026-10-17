@@ -1,0 +1,63 @@
+Campus Complaint Management Portal
+
+Many colleges still handle maintenance complaints manually.
+
+Users
+Students
+Faculty
+Staff
+Admin
+Complaint categories
+Electrical
+Wi-Fi
+Plumbing
+Cleaning
+Classroom
+Hostel
+Workflow
+
+Student logs in → submits complaint → database stores it → admin assigns it → staff updates status → student tracks progress.
+
+Dashboard
+Total complaints
+Pending
+Resolved
+Department-wise statistics
+Average resolution time
+
+This project showcases transactions, updates, reporting, and role-based access.
+
+---
+
+50-50 weightage for both DBMS and OS, you need to treat the portal not just as a web application, but as a system resource manager.
+For the DBMS, the focus will be on schema normalization, complex queries, triggers, and ACID properties. For the OS evaluator, the focus must be on applying OS concepts to web architecture: concurrency (mutex/semaphores), CPU scheduling algorithms applied to tickets, file I/O, and shell scripting.
+
+---
+
+These modules handle the complex logic, algorithms, and system integrations that will impress both evaluators.
+
+Module 1 (Team Leader): Concurrency & Transaction Management
+OS Focus (Concurrency & Deadlocks): Implement Mutex/Semaphores to handle race conditions. If an Admin is assigning a ticket to Staff, and the Staff is simultaneously updating that ticket's status, use locking mechanisms so data isn't corrupted.
+DBMS Focus (ACID & Transactions): Manage complex transactions. When assigning a ticket, the system must update the ticket status, assign the staff ID, and increment the staff's active task count. If any step fails, the entire transaction must rollback.
+
+Module 2 (Strong): Engine & File System Architecture
+OS Focus (File System & I/O): Manage how complaint attachments (e.g., photos of broken plumbing) are stored. Implement secure file handling, directory permissions, and inode management concepts so unauthorized users cannot access other students' uploads.
+DBMS Focus (Schema & Triggers): Design the highly normalized Database Schema (up to 3NF). Write database Triggers that automatically generate system logs or update last_modified timestamps whenever a complaint's status changes.
+
+Module 3 (Strong): Analytics & Task Scheduling Algorithms
+OS Focus (CPU Scheduling): Apply OS scheduling algorithms to real-world tasks. Build an auto-assign feature using Priority Scheduling (e.g., Electrical hazards get higher priority than Cleaning) or Shortest Job First (based on historical average resolution times for that category).
+DBMS Focus (Complex Queries & Views): Build the analytical engine for the Dashboard. Write complex JOINs, aggregate functions (COUNT, AVG), and create Database Views to efficiently fetch department-wise statistics and calculate the average resolution time.
+The Supporting Developers (3 Beginner Modules)
+These modules are highly accessible. The code required is simpler, but they incorporate specific buzzwords and concepts that evaluators look for, ensuring these Modules still get strong individual marks.
+
+Module 4 (Beginner): Automation & Authentication
+OS Focus (Shell Scripting): Write a bash script paired with a Cron Job that runs on the server every night at midnight to create an automated backup of the database.
+DBMS Focus (Basic CRUD): Handle the database SELECT and INSERT queries for the login, registration, and role-based access system (verifying if a user is Admin, Staff, or Student).
+
+Module 5 (Beginner): Submission Engine & Process Monitoring
+OS Focus (Process Management): Write a simple health-check bash script. This script checks if the web server process and database process are running, and logs an alert if they crash (demonstrating process monitoring).
+DBMS Focus (Data Insertion): Build the backend logic for the "Submit Complaint" form. Write the INSERT queries to safely store the user's input, category, and timestamps into the database.
+
+Module 6 (Beginner): Status Tracking & Memory Caching
+OS Focus (Memory Management/Caching): Implement simple file-based caching. Instead of querying the database every single time the Admin loads the "Total Complaints" number, write logic to cache this number temporarily, demonstrating memory vs. disk read speeds.
+DBMS Focus (Data Retrieval): Write the specific SELECT and WHERE queries that allow a student to view only their own history and track the progress of their active tickets.

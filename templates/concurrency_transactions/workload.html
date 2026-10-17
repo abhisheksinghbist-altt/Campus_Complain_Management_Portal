@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Staff Workload{% endblock %}
+{% block page_title %}Staff Workload{% endblock %}
+{% block page_sub %}Current task load across all staff members{% endblock %}
+{% block content %}
+<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
+  <div class="stat-card" style="border-left-color:#3b82f6;"><div class="stat-value" style="color:#3b82f6;">{{ workloads|length }}</div><div class="stat-label">Total Staff</div></div>
+  <div class="stat-card" style="border-left-color:#10b981;"><div class="stat-value" style="color:#10b981;">{{ available_count }}</div><div class="stat-label">Available</div></div>
+  <div class="stat-card" style="border-left-color:#ef4444;"><div class="stat-value" style="color:#ef4444;">{{ full_count }}</div><div class="stat-label">At Capacity</div></div>
+</div>
+<div class="card" style="padding:0;overflow:hidden;">
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Staff Member</th><th>Department</th><th>Active Tasks</th><th>Capacity</th><th>Workload</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for item in workloads %}
+    <tr>
+      <td><div style="font-weight:600;font-size:0.875rem;">{{ item.user.get_full_name }}</div><div style="font-size:0.75rem;color:var(--muted);">{{ item.user.username }}</div></td>
+      <td style="font-size:0.85rem;">{{ item.user.department|default:"—" }}</td>
+      <td style="font-weight:700;font-size:1rem;{% if item.workload.active_count >= item.workload.max_capacity %}color:var(--danger){% else %}color:var(--text){% endif %}">{{ item.workload.active_count }}</td>
+      <td style="color:var(--muted);font-size:0.85rem;">{{ item.workload.max_capacity }}</td>
+      <td style="min-width:120px;">
+        <div class="progress" style="height:10px;">
+          <div class="progress-bar" style="width:{{ item.pct }}%;background:{% if item.pct >= 80 %}var(--danger){% elif item.pct >= 60 %}var(--warning){% else %}var(--success){% endif %};"></div>
+        </div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">{{ item.pct }}%</div>
+      </td>
+      <td>
+        {% if item.workload.active_count >= item.workload.max_capacity %}
+          <span class="badge" style="background:#fee2e2;color:#991b1b;">Full</span>
+        {% elif item.pct >= 60 %}
+          <span class="badge" style="background:#fef3c7;color:#92400e;">Busy</span>
+        {% else %}
+          <span class="badge" style="background:#d1fae5;color:#065f46;">Available</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">👥</div><p>No staff members found.</p></div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

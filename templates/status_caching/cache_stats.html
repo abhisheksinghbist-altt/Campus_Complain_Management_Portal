@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Cache Stats{% endblock %}
+{% block page_title %}Cache Statistics{% endblock %}
+{% block page_sub %}File-based cache hit/miss analysis (OS memory management concept){% endblock %}
+{% block content %}
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+  <div class="stat-card" style="border-left-color:#3b82f6;"><div class="stat-value" style="color:#3b82f6;">{{ total }}</div><div class="stat-label">Total Requests</div></div>
+  <div class="stat-card" style="border-left-color:#10b981;"><div class="stat-value" style="color:#10b981;">{{ hits }}</div><div class="stat-label">Cache Hits</div></div>
+  <div class="stat-card" style="border-left-color:#ef4444;"><div class="stat-value" style="color:#ef4444;">{{ misses }}</div><div class="stat-label">Cache Misses</div></div>
+  <div class="stat-card" style="border-left-color:#8b5cf6;"><div class="stat-value" style="color:#8b5cf6;">{{ hit_rate }}%</div><div class="stat-label">Hit Rate</div></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+  <div class="card">
+    <div class="section-title" style="margin-bottom:14px;">Hit Rate Breakdown</div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div style="flex:1;">
+        <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px;"><span style="color:var(--success);">Hits</span><span>{{ hit_rate }}%</span></div>
+        <div class="progress" style="height:12px;margin-bottom:10px;"><div class="progress-bar" style="width:{{ hit_rate }}%;background:var(--success);"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px;"><span style="color:var(--danger);">Misses</span><span>{% widthratio misses total 100 %}%</span></div>
+        <div class="progress" style="height:12px;"><div class="progress-bar" style="width:{% widthratio misses total 100 %}%;background:var(--danger);"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title" style="margin-bottom:14px;">Average Latency</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px;">
+      <div style="text-align:center;padding:16px;background:#d1fae5;border-radius:8px;">
+        <div style="font-size:1.5rem;font-weight:800;color:#065f46;">{{ avg_hit_ms }}ms</div>
+        <div style="font-size:0.75rem;color:#065f46;margin-top:4px;">Cache Hit (fast)</div>
+      </div>
+      <div style="text-align:center;padding:16px;background:#fee2e2;border-radius:8px;">
+        <div style="font-size:1.5rem;font-weight:800;color:#991b1b;">{{ avg_miss_ms }}ms</div>
+        <div style="font-size:0.75rem;color:#991b1b;margin-top:4px;">DB Query (slow)</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="card" style="padding:0;overflow:hidden;">
+  <div style="padding:16px 20px;border-bottom:1px solid var(--border);"><div class="section-title">Recent Cache Events</div></div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Time</th><th>Key</th><th>Result</th><th>Latency</th></tr></thead>
+    <tbody>
+    {% for m in recent %}
+    <tr>
+      <td style="font-size:0.78rem;color:var(--muted);">{{ m.timestamp|date:"d M, H:i:s" }}</td>
+      <td style="font-size:0.8rem;font-family:monospace;">{{ m.key|truncatechars:40 }}</td>
+      <td>{% if m.hit %}<span class="badge" style="background:#d1fae5;color:#065f46;">HIT</span>{% else %}<span class="badge" style="background:#fee2e2;color:#991b1b;">MISS</span>{% endif %}</td>
+      <td style="font-size:0.85rem;">{{ m.latency_ms }}ms</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4"><div class="empty-state">No cache events recorded yet. Browse My Complaints to generate cache data.</div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}
